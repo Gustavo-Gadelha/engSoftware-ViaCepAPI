@@ -2,19 +2,15 @@ package com.fafic.Main;
 
 
 import com.fafic.Model.ViaCep;
-import com.fafic.Exception.BadRequestException;
 import com.fafic.Exception.CEPInvalidoException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
 import javax.swing.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 public class Main {
@@ -25,9 +21,7 @@ public class Main {
         String cepInput = JOptionPane.showInputDialog("Informe Seu CEP: ").replaceAll("\\D+", "");
 
         if (isValidCEP(cepInput)) {
-            InputStream xmlInputStream = requestCep(cepInput);
-            ViaCep viaCep = unmarshalXML(xmlInputStream);
-
+            ViaCep viaCep = unmarshalXML(WEBSERVICE + cepInput + XML);
             String mensagem = viaCep.cep == null ? "CEP não encontrado" : viaCep.toString();
             JOptionPane.showMessageDialog(null, mensagem);
         }
@@ -39,29 +33,12 @@ public class Main {
         return true;
     }
 
-    public static InputStream requestCep(String cep) throws RuntimeException {
+    public static ViaCep unmarshalXML(String host) throws RuntimeException {
         try {
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpRequest httpRequest = HttpRequest.newBuilder().GET().uri(new URI(WEBSERVICE + cep + XML)).build();
-
-            System.out.println("Enviando httpRequest para " + httpRequest.uri());
-            HttpResponse<InputStream> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-            if (httpResponse.statusCode() == 400) {
-                throw new BadRequestException("400 (Bad Request): Consultado um CEP de formato inválido");
-            }
-
-            return httpResponse.body();
-        } catch (URISyntaxException | IOException | InterruptedException | BadRequestException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
-    public static ViaCep unmarshalXML(InputStream xmlcep) throws RuntimeException {
-        try {
+            URI uri = new URI(host);
             Unmarshaller unmarshaller = JAXBContext.newInstance(ViaCep.class).createUnmarshaller();
-            return (ViaCep) unmarshaller.unmarshal(xmlcep);
-        } catch (JAXBException e) {
+            return (ViaCep) unmarshaller.unmarshal(uri.toURL());
+        } catch (JAXBException | MalformedURLException | URISyntaxException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
