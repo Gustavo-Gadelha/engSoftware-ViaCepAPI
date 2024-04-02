@@ -2,7 +2,7 @@
 
 _Professor Luciano Tavares • 15 de mar_
 
-_Data de entrega: 22 de mar_
+_Data de entrega • 22 de mar_
 
 ## Atividade
 
